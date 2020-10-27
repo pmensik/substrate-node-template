@@ -37,6 +37,7 @@ pub use frame_support::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 	},
 };
+pub use pallet_nicks;
 
 /// Import the template pallet.
 pub use pallet_template;
@@ -266,6 +267,34 @@ impl pallet_template::Trait for Runtime {
 	type Event = Event;
 }
 
+parameter_types! {
+    pub const NickReservationFee: u128 = 100;
+    pub const MinNickLength: usize = 8;
+    // Maximum bounds on storage are important to secure your chain.
+    pub const MaxNickLength: usize = 32;
+}
+
+impl pallet_nicks::Trait for Runtime {
+    type Currency = pallet_balances::Module<Runtime>;
+
+    type ReservationFee = NickReservationFee;
+
+    type Slashed = ();
+
+    // Configure the FRAME System Root origin as the Nick pallet admin.
+    // https://substrate.dev/rustdocs/v2.0.0/frame_system/enum.RawOrigin.html#variant.Root
+    type ForceOrigin = frame_system::EnsureRoot<AccountId>;
+
+    // Use the MinNickLength from the parameter_types block.
+    type MinLength = MinNickLength;
+
+    // Use the MaxNickLength from the parameter_types block.
+    type MaxLength = MaxNickLength;
+
+    // The ubiquitous event type.
+    type Event = Event;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -283,6 +312,7 @@ construct_runtime!(
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the template pallet in the runtime.
 		TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
+        Nicks: pallet_nicks::{Module, Call, Storage, Event<T>},
 	}
 );
 
